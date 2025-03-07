@@ -1,0 +1,8 @@
+prefix=/home/haomo/catkin_ws/src/rm_digtialimg_proc_deep/cmake-build-debug/devel
+
+Name: rm_digtialimg_proc_deep
+Description: Description of rm_digtialimg_proc_deep
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 

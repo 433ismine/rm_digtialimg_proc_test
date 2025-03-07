@@ -2,24 +2,30 @@
 // Created by gx on 24-1-27.
 //
 
-
+#include <common.h>
 #ifndef V8_INFERENCE_H
-#include <iostream>
-#include <string>
-#include <vector>
 #include <algorithm>
-#include <openvino/openvino.hpp> //openvino header file
-#include <opencv2/opencv.hpp>    //opencv header file
-#include <thread>
-#include <mutex>
-#include <future>
-#include <queue>
 #include <condition_variable>
+#include <future>
+#include <iostream>
+#include <mutex>
+#include <opencv2/opencv.hpp>    //opencv header file
+#include <openvino/openvino.hpp> //openvino header file
+#include <queue>
+#include <string>
 #include <thread>
+#include <vector>
 
-#define model_path "../model/mobilenetv3_last_int_all_new/last.xml"
-#define score_threshold 0.7
-#define nms_threshold 0.3
+#include <rm_digtialimg_proc_deep/InferenceConfig.h>
+
+/*#define model_path                                                             \
+  "/home/haomo/catkin_ws/src/rm_digtialimg_proc_deep/model/"                   \
+  "mobilenetv3_last_int_all_new/last.xml"*/
+
+#define model_path                                                             \
+  "/home/lovod/rm_code/src/rm_visplugin/rm_digtialimg_proc_deep/model/"                   \
+  "mobilenetv3_last_int_all_new/last.xml"
+
 #define XML_SIZE 416
 
 /*
@@ -33,25 +39,23 @@
 //******************推理**************
 //模型加载（懒狗不想写类，全用静态函数了）
 struct dataImg{
-    float scale;
-    cv::Mat blob;
-    cv::Mat input;
+    float scale; //缩放比例
+    cv::Mat blob; //处理后的图像blob
+    cv::Mat input; //原始输入图像
 };
-struct Armor{
-    std::vector<float> class_scores;
-    std::vector<cv::Rect> boxes;
-    std::vector<std::vector<float>> objects_keypoints;
-    int class_ids;
-
+struct Armor {
+  std::vector<float> class_scores;
+  std::vector<cv::Rect> boxes;
+  std::vector<std::vector<float>> objects_keypoints;
+  int class_ids;
 };
-struct OneArmor{
-    float class_scores;
-    cv::Rect box;
-    cv::Point2f objects_keypoints[4];
-    int class_ids;//color
-    cv::Mat number_img;
-    std::string number;
-
+struct OneArmor {
+  float class_scores;
+  cv::Rect box;
+  cv::Point2f objects_keypoints[4];
+  int class_ids; // color
+  cv::Mat number_img;
+  std::string number;
 };
 
 static std::once_flag flag;
@@ -59,12 +63,18 @@ static ov::Core core;
 static ov::CompiledModel compiled_model;
 static ov::InferRequest infer_request;
 static ov::Output<const ov::Node> input_port;
-dataImg preprocessImage(const cv::Mat& img, cv::Size new_shape=cv::Size( XML_SIZE, XML_SIZE), cv::Scalar color=cv::Scalar(114,114,114)); //图片预处理
-std::vector<OneArmor> startInferAndNMS(dataImg data );//开始推理并返回结果
+extern rm_digtialimg_proc_deep::TargetColor target_color_;
+inline rm_digtialimg_proc_deep::TargetColor target_color_;
 
-void show_points_result(cv::Mat& img,std::vector<OneArmor> armors_data );
-void show_box_result(cv::Mat& img,std::vector<OneArmor> armors_data );
-void show_number_result(cv::Mat& img,std::vector<OneArmor> armors_data);
+dataImg preprocessImage(const cv::Mat &img,
+                        cv::Size new_shape = cv::Size(XML_SIZE, XML_SIZE),
+                        cv::Scalar color = cv::Scalar(114, 114,
+                                                      114)); // 图片预处理
+std::vector<OneArmor> startInferAndNMS(dataImg img_data, double score_threshold_,double nms_threshold_); // 开始推理并返回结果
+
+void show_points_result(cv::Mat &img, std::vector<OneArmor> armors_data);
+void show_box_result(cv::Mat &img, std::vector<OneArmor> armors_data);
+void show_number_result(cv::Mat &img, std::vector<OneArmor> armors_data);
 
 #define V8_INFERENCE_H
 
